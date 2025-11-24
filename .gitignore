@@ -1,0 +1,21 @@
+# Entorno virtual
+entorno_maps/
+entorno_maps39/
+
+# Archivos compilados
+dist/
+build/
+*.exe
+*.pkg
+
+# Cachés y temporales
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.log
+*.sqlite3
+
+# Configuración local
+.vscode/
+.idea/
