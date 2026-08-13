@@ -1,10 +1,10 @@
 # Imagen base ligera de Python
 FROM python:3.9-slim
 
-# Directorio de trabajo dentro del contenedor
+# Establecer directorio de trabajo dentro del contenedor
 WORKDIR /app
 
-# Copiar dependencias
+# Copiar archivo de dependencias
 COPY requirements.txt .
 
 # Instalar dependencias

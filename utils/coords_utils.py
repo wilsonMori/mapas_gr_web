@@ -23,7 +23,7 @@ def procesar_coordenadas(coordenada_str):
     return None, None
 
 def extraer_coordenadas(df):
-    st.info("📍 Procesando coordenadas...")
+    st.info("Procesando coordenadas...")
     columnas_lower = {col.lower(): col for col in df.columns}
 
     if 'coordenadas' in columnas_lower:
