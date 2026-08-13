@@ -7,8 +7,8 @@ function getApiBaseUrl() {
     return 'http://localhost:8000';
   }
   
-  // Si está desplegado en un servidor web como almacengr.com
-  return `${window.location.protocol}//${window.location.hostname}:8000`;
+  // Servidor Backend en producción en la nube (Render HTTPS)
+  return 'https://mapas-gr-web.onrender.com';
 }
 
 const API_BASE_URL = getApiBaseUrl();
