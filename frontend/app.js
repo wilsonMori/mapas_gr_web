@@ -122,7 +122,7 @@ function openReassignModal(selectedCount) {
   const labelEl = document.getElementById('modal-target-label');
   const inputEl = document.getElementById('modal-target-value');
 
-  countEl.innerHTML = `📍 Se han seleccionado <strong style="color:#34d399; font-size:1.15rem;">${selectedCount} puntos</strong> dentro del polígono dibujado.`;
+  countEl.innerHTML = `Se han seleccionado <strong style="color:#34d399; font-size:1.15rem;">${selectedCount} puntos</strong> dentro del polígono dibujado.`;
   
   if (appState.targetColumn === 'Tecnico') {
     labelEl.innerText = `¿A qué Técnico deseas asignarlos para el Día ${appState.selectedDayForTech || 1}?`;
