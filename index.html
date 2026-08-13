@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mapas GR - Planificación de Rutas y Distribución Geográfica</title>
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Leaflet & Leaflet Draw CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css" />
+
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+  <!-- Estilos Personalizados -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Navbar Superior -->
+  <header class="navbar">
+    <div class="navbar-brand">
+      <button id="btn-toggle-sidebar" class="btn-sidebar-toggle" title="Ocultar / Mostrar Panel Lateral"><i class="fa-solid fa-bars-staggered"></i></button>
+      <div class="logo-icon"><i class="fa-solid fa-map-location-dot"></i></div>
+      <span>Mapas GR <small style="font-size:0.75rem; color:#94a3b8; font-weight:400; margin-left:6px;">| Desarrollado por: Wilson MORI SANTANA</small></span>
+    </div>
+
+    <div class="step-indicator">
+      <div class="step-item active" id="step-1"><i class="fa-solid fa-file-excel"></i> 1. Cargar Excel</div>
+      <div class="step-item" id="step-2"><i class="fa-solid fa-calendar-days"></i> 2. Asignar Días</div>
+      <div class="step-item" id="step-3"><i class="fa-solid fa-draw-polygon"></i> 3. Edición en Mapa</div>
+      <div class="step-item" id="step-4"><i class="fa-solid fa-user-gear"></i> 4. Técnicos</div>
+    </div>
+  </header>
+
+  <!-- Contenedor Principal -->
+  <div class="app-container">
+    
+    <!-- Sidebar Izquierdo de Controles -->
+    <aside class="sidebar">
+      
+      <!-- Paso 1: Carga de Archivo Excel -->
+      <div class="card" id="card-upload">
+        <div class="card-title"><i class="fa-solid fa-cloud-arrow-up"></i> Cargar Archivo de Puntos</div>
+        <div class="dropzone" id="dropzone">
+          <div class="dropzone-icon"><i class="fa-solid fa-file-csv"></i></div>
+          <div class="dropzone-text">
+            <strong>Arrastra tu archivo Excel (.xlsx)</strong><br>
+            <span>o haz clic para explorar</span>
+          </div>
+          <input type="file" id="file-input" accept=".xlsx, .xls" style="display:none;">
+        </div>
+        <div id="upload-status" style="font-size:0.82rem; color:#34d399; display:none;"></div>
+      </div>
+
+      <!-- Paso 2: Algoritmo por Días -->
+      <div class="card" id="card-days" style="opacity: 0.5; pointer-events: none;">
+        <div class="card-title"><i class="fa-solid fa-sliders"></i> Divisón por Días</div>
+        
+        <div class="form-group">
+          <label for="num-days">Número de Días:</label>
+          <input type="number" id="num-days" class="form-control" value="5" min="1" max="30">
+        </div>
+
+        <div class="form-group">
+          <label for="algo-days">Algoritmo de Asignación:</label>
+          <select id="algo-days" class="form-control">
+            <option value="Por zona">Por zona</option>
+            <option value="Capacitado">Capacitado</option>
+            <option value="Sweep">Sweep</option>
+            <option value="kms-evolutivo" selected>kms-evolutivo</option>
+          </select>
+        </div>
+
+        <button class="btn" id="btn-run-days"><i class="fa-solid fa-play"></i> Aplicar Distribución por Días</button>
+      </div>
+
+      <!-- Paso 3: Edición Poligonal Manual -->
+      <div class="card" id="card-edit" style="opacity: 0.5; pointer-events: none;">
+        <div class="card-title"><i class="fa-solid fa-paintbrush"></i> Reasignar por Polígono</div>
+        <p style="font-size: 0.8rem; color: #94a3b8;">
+          Usa la herramienta de dibujo (polígono) en la esquina izquierda del mapa para encerrar los puntos que deseas cambiar.
+        </p>
+
+        <div class="form-group">
+          <label for="new-day-val">Asignar Puntos Seleccionados a (Día / Técnico):</label>
+          <input type="text" id="new-day-val" class="form-control" value="1" placeholder="Ej: 1, Día 1 o Juan Pérez">
+        </div>
+
+        <div id="polygon-selection-info" style="font-size:0.8rem; color:#60a5fa; display:none;"></div>
+        <button class="btn btn-secondary" id="btn-apply-polygon" disabled><i class="fa-solid fa-floppy-disk"></i> Guardar Cambios en Mapa</button>
+      </div>
+
+      <!-- Paso 4: Asignación Manual de Técnicos -->
+      <div class="card" id="card-technicians" style="opacity: 0.5; pointer-events: none;">
+        <div class="card-title"><i class="fa-solid fa-user-gear"></i> Asignar Técnicos por Día</div>
+        
+        <div class="form-group">
+          <label for="select-day-tech">Día a Trabajar:</label>
+          <select id="select-day-tech" class="form-control"></select>
+        </div>
+
+        <div class="form-group">
+          <label for="tech-number-input">Técnico Destino (Número / Nombre):</label>
+          <input type="text" id="tech-number-input" class="form-control" value="Técnico 1" placeholder="Ej: Juan Pérez, Carlos o 1">
+        </div>
+
+        <button class="btn btn-success" id="btn-save-tech-assign"><i class="fa-solid fa-floppy-disk"></i> Guardar Asignación de Técnico</button>
+        <button class="btn btn-secondary" id="btn-filter-day-view" style="margin-top: 8px;"><i class="fa-solid fa-eye"></i> Ver Solo Puntos de Este Día</button>
+      </div>
+
+      <!-- Exportación Excel -->
+      <div class="card" id="card-export">
+        <div class="card-title"><i class="fa-solid fa-file-export"></i> Exportar Resultados</div>
+        <button class="btn btn-success" id="btn-export-excel"><i class="fa-solid fa-file-excel"></i> Descargar Excel Completo</button>
+      </div>
+
+    </aside>
+
+    <!-- Mapa interactivo Leaflet -->
+    <main class="map-container">
+      <div id="map"></div>
+
+      <!-- Panel Flotante de Estadísticas sobre el mapa -->
+      <div class="map-overlay-stats">
+        <div class="stats-title">
+          <span><i class="fa-solid fa-chart-pie"></i> Resumen de Puntos</span>
+          <span id="total-points-badge" style="background:#3b82f6; padding:2px 8px; border-radius:10px; font-size:0.75rem; color:#fff;">0 pts</span>
+        </div>
+        <div class="stats-list" id="stats-list-container">
+          <div style="font-size:0.8rem; color:#64748b; text-align:center; padding:10px;">No se ha cargado archivo aún</div>
+        </div>
+
+        <div id="chart-container" style="display:none; margin-top:15px; border-top:1px solid #334155; padding-top:10px;">
+          <div style="font-size:0.75rem; color:#94a3b8; font-weight:600; margin-bottom:6px;">Convergencia Evolutiva:</div>
+          <canvas id="costChart" width="240" height="120"></canvas>
+        </div>
+      </div>
+    </main>
+
+  </div>
+
+  <!-- Modal Interactivo para Reasignación al Dibujar Polígonos -->
+  <div id="modal-reassign" class="modal-backdrop" style="display:none;">
+    <div class="modal-box">
+      <div class="modal-header">
+        <i class="fa-solid fa-draw-polygon"></i> Reasignar Puntos Seleccionados
+      </div>
+      <div class="modal-body">
+        <p id="modal-points-count" style="font-size:0.95rem; margin-bottom:14px; color:#e2e8f0;"></p>
+        <div class="form-group">
+          <label for="modal-target-value" id="modal-target-label" style="font-weight:600; color:#93c5fd;">¿A qué Día o Técnico deseas cambiarlos?</label>
+          <input type="text" id="modal-target-value" class="form-control" value="1" placeholder="Ej: Juan Pérez, Técnico 1 o 2">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="btn-modal-cancel">Cancelar</button>
+        <button class="btn btn-success" id="btn-modal-confirm"><i class="fa-solid fa-check"></i> Confirmar y Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Componentes JS externos -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Lógica Principal Javascript -->
+  <script src="app.js"></script>
+</body>
+</html>
