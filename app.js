@@ -275,8 +275,8 @@ async function handleFileUpload(file) {
   } catch (error) {
     statusEl.style.color = '#ef4444';
     if (error.message.includes('fetch') || error.message.includes('NetworkError')) {
-      statusEl.innerHTML = `❌ <strong>Error de Conexión con el Servidor</strong><br><small style="color:#f87171;">Asegúrate de ejecutar <code>run_backend.bat</code> en tu PC para iniciar el servidor Python (http://localhost:8000).</small>`;
-      showToast(`❌ Servidor desconectado. Inicia 'run_backend.bat' en tu equipo.`, 'error');
+      statusEl.innerHTML = `❌ <strong>Servidor Backend Despertando...</strong><br><small style="color:#f87171;">El servidor en la nube (Render) está despertando de su modo reposo (tarda ~30s la primera vez). Por favor, presiona F5 o reintenta subir tu Excel en unos segundos.</small>`;
+      showToast(`⏳ Servidor despertando en la nube. Reintenta en unos segundos...`, 'error');
     } else {
       statusEl.innerText = `❌ ${error.message}`;
       showToast(`Error: ${error.message}`, 'error');
