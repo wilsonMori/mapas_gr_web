@@ -1,13 +1,5 @@
-// Detectar la URL del servidor API backend con soporte para file:// y dominios HTTP/HTTPS
 function getApiBaseUrl() {
-  const isLocalFile = window.location.protocol === 'file:';
-  const isLocalHost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname === '';
-  
-  if (isLocalFile || isLocalHost) {
-    return 'http://localhost:8000';
-  }
-  
-  // Servidor Backend en producción en la nube (Render HTTPS)
+  // Servidor Backend REST de producción activo en la nube (Render HTTPS)
   return 'https://mapas-gr-web.onrender.com';
 }
 
