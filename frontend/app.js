@@ -282,8 +282,13 @@ async function handleFileUpload(file) {
 
   } catch (error) {
     statusEl.style.color = '#ef4444';
-    statusEl.innerText = `❌ ${error.message}`;
-    showToast(`Error: ${error.message}`, 'error');
+    if (error.message.includes('fetch') || error.message.includes('NetworkError')) {
+      statusEl.innerHTML = `❌ <strong>Error de Conexión con el Servidor</strong><br><small style="color:#f87171;">Asegúrate de ejecutar <code>run_backend.bat</code> en tu PC para iniciar el servidor Python (http://localhost:8000).</small>`;
+      showToast(`❌ Servidor desconectado. Inicia 'run_backend.bat' en tu equipo.`, 'error');
+    } else {
+      statusEl.innerText = `❌ ${error.message}`;
+      showToast(`Error: ${error.message}`, 'error');
+    }
   }
 }
 
