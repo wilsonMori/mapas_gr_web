@@ -290,7 +290,11 @@ async function runDaysPartition() {
   const algo = document.getElementById('algo-days').value;
 
   try {
-    showToast('⏳ Calculando partición por días...');
+    showToast(`⏳ Calculando algoritmo "${algo}"... (si la nube estuvo inactiva, puede demorar unos segundos en responder)`);
+    
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 45000);
+
     const response = await fetch(`${API_BASE_URL}/api/partition`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -299,8 +303,11 @@ async function runDaysPartition() {
         n_clusters: nDays,
         algoritmo: algo,
         target_column: 'Dia'
-      })
+      }),
+      signal: controller.signal
     });
+
+    clearTimeout(timeoutId);
 
     if (!response.ok) {
       const err = await response.json();
@@ -326,10 +333,14 @@ async function runDaysPartition() {
     populateDaySelectForTechnicians();
     enableCard('card-technicians');
     setStepActive('step-3');
-    showToast(`✅ Algoritmo "${algo}" aplicado a ${nDays} días.`);
+    showToast(`✅ Algoritmo "${algo}" aplicado con éxito a ${nDays} días.`);
 
   } catch (error) {
-    showToast(`Error: ${error.message}`, 'error');
+    if (error.name === 'AbortError') {
+      showToast('⚠️ El servidor en la nube estaba durmiendo y tardó en responder. Haz clic en "Aplicar Distribución por Días" una vez más.', 'error');
+    } else {
+      showToast(`Error al ejecutar ${algo}: ${error.message}`, 'error');
+    }
   }
 }
 

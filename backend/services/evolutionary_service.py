@@ -37,7 +37,7 @@ def evaluate_cost_fast(coords, asignaciones, n_dias, cantidades, alpha=1.0, beta
     unassigned_penalty = np.sum(asignaciones == -1) * 5.0
     return float(alpha * dispersion + beta * overlap + gamma * desbalance + unassigned_penalty)
 
-def asignar_por_kmeans_evolutivo(df, cantidades, n_generations=20, population_size=10,
+def asignar_por_kmeans_evolutivo(df, cantidades, n_generations=15, population_size=8,
                                  alpha=1.0, beta=3.0, gamma=2.0, mutation_sigma=0.001):
     df = df.copy()
     n_dias = len(cantidades)
