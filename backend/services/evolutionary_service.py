@@ -49,7 +49,11 @@ def asignar_por_kmeans_evolutivo(df, cantidades, n_generations=40, population_si
                                  alpha=1.0, beta=3.0, gamma=2.0, mutation_sigma=0.001):
     df = df.copy()
     n_dias = len(cantidades)
-    coords = df[["Latitud", "Longitud"]].values
+    coords = df[["Latitud", "Longitud"]].values.astype(float)
+
+    if len(coords) < n_dias:
+        df["Dia"] = 0
+        return df, {"mejor_costo": 0.0, "historial_costos": [0.0]}
 
     kmeans = KMeans(n_clusters=n_dias, n_init=10, random_state=42)
     df["Dia"] = kmeans.fit_predict(coords)
@@ -63,17 +67,19 @@ def asignar_por_kmeans_evolutivo(df, cantidades, n_generations=40, population_si
     best_df, best_cost = None, float("inf")
     history = []
 
+    # Optimización vectorizada numpy de alto rendimiento
     for gen in range(n_generations):
         scored = []
         for c_matrix in population:
-            asignaciones = []
-            for i, row in df.iterrows():
-                dists = np.linalg.norm(c_matrix - np.array([row["Latitud"], row["Longitud"]]), axis=1)
-                asignaciones.append(int(np.argmin(dists)))
-            df["Dia"] = asignaciones
+            # Cálculo vectorizado instantáneo de distancias (N, K)
+            dists = np.linalg.norm(coords[:, np.newaxis, :] - c_matrix[np.newaxis, :, :], axis=2)
+            asignaciones = np.argmin(dists, axis=1)
+            
+            temp_df = df.copy()
+            temp_df["Dia"] = asignaciones
 
-            cost = evaluate_cost(df, cantidades, alpha, beta, gamma)
-            scored.append((c_matrix, cost, df.copy()))
+            cost = evaluate_cost(temp_df, cantidades, alpha, beta, gamma)
+            scored.append((c_matrix, cost, temp_df))
 
         scored.sort(key=lambda x: x[1])
         elites = scored[:max(1, population_size // 4)]
@@ -89,5 +95,8 @@ def asignar_por_kmeans_evolutivo(df, cantidades, n_generations=40, population_si
             child = parent + np.random.normal(0, mutation_sigma, size=parent.shape)
             new_pop.append(child)
         population = new_pop
+
+    if best_df is None:
+        best_df = df
 
     return best_df, {"mejor_costo": float(best_cost), "historial_costos": history}
