@@ -24,12 +24,28 @@ def procesar_coordenada_individual(coordenada_str):
 def extraer_y_limpiar_coordenadas(df: pd.DataFrame):
     df_clean = df.copy()
 
-    # Convertir columnas de fecha a string para no perder el formato en la descarga
-    for col in df_clean.select_dtypes(include=['datetime', 'datetimetz']).columns:
-        if (df_clean[col].dropna().dt.time == pd.Timestamp('00:00:00').time()).all():
-            df_clean[col] = df_clean[col].dt.strftime('%d/%m/%Y')
-        else:
-            df_clean[col] = df_clean[col].dt.strftime('%d/%m/%Y %H:%M:%S')
+    import datetime
+    import re
+    def format_if_datetime(x):
+        if isinstance(x, (pd.Timestamp, datetime.datetime, datetime.date)):
+            if getattr(x, 'time', lambda: datetime.time(0,0))() == datetime.time(0, 0):
+                return x.strftime('%d/%m/%Y')
+            else:
+                return x.strftime('%d/%m/%Y %H:%M:%S')
+        elif isinstance(x, str) and re.match(r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}', x):
+            try:
+                dt = pd.to_datetime(x)
+                if getattr(dt, 'time', lambda: datetime.time(0,0))() == datetime.time(0, 0):
+                    return dt.strftime('%d/%m/%Y')
+                else:
+                    return dt.strftime('%d/%m/%Y %H:%M:%S')
+            except:
+                pass
+        return x
+
+    # Convertir todas las celdas que sean fechas a string para no perder el formato
+    for col in df_clean.columns:
+        df_clean[col] = df_clean[col].apply(format_if_datetime)
 
     columnas_lower = {col.lower().strip(): col for col in df_clean.columns}
 
