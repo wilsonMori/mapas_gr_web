@@ -23,6 +23,14 @@ def procesar_coordenada_individual(coordenada_str):
 
 def extraer_y_limpiar_coordenadas(df: pd.DataFrame):
     df_clean = df.copy()
+
+    # Convertir columnas de fecha a string para no perder el formato en la descarga
+    for col in df_clean.select_dtypes(include=['datetime', 'datetimetz']).columns:
+        if (df_clean[col].dropna().dt.time == pd.Timestamp('00:00:00').time()).all():
+            df_clean[col] = df_clean[col].dt.strftime('%d/%m/%Y')
+        else:
+            df_clean[col] = df_clean[col].dt.strftime('%d/%m/%Y %H:%M:%S')
+
     columnas_lower = {col.lower().strip(): col for col in df_clean.columns}
 
     if 'coordenadas' in columnas_lower:
@@ -50,12 +58,15 @@ def extraer_y_limpiar_coordenadas(df: pd.DataFrame):
     # Identificar columna contrato si existe
     col_contrato = next((col for col in df_clean.columns if 'contrato' in col.lower()), None)
     if col_contrato:
-        df_clean['Contrato'] = df_clean[col_contrato].astype(str)
+        df_clean['Contrato'] = df_clean[col_contrato]
     else:
         df_clean['Contrato'] = [f"Item {i+1}" for i in range(len(df_clean))]
 
     df_clean = df_clean.reset_index(drop=True)
     df_clean['point_id'] = df_clean.index.astype(int)
+
+    # Reemplazar NaN por None para evitar problemas en la serialización JSON
+    df_clean = df_clean.replace({float('nan'): None})
 
     return df_clean, {
         "total_original": original_count,
