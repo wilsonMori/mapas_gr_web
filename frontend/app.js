@@ -1,4 +1,8 @@
 function getApiBaseUrl() {
+  // Si estamos ejecutando la app localmente (como .exe), usar localhost
+  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    return 'http://localhost:8000';
+  }
   // Servidor Backend REST de producción activo en la nube (Render HTTPS)
   return 'https://mapas-gr-web.onrender.com';
 }
