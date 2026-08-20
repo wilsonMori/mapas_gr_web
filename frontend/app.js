@@ -33,7 +33,28 @@ let drawnItemsLayer = null;
 document.addEventListener('DOMContentLoaded', () => {
   initMap();
   initEventListeners();
+  initKeepAlive();
 });
+
+// Función para mantener el backend de Render despierto (Ping cada 10 min)
+function initKeepAlive() {
+  const pingInterval = 10 * 60 * 1000; // 10 minutos
+  
+  // Hacer un ping periódico
+  setInterval(() => {
+    fetch(`${API_BASE_URL}/health`)
+      .then(res => res.json())
+      .then(data => console.log('✅ Keep-Alive Ping OK:', data))
+      .catch(err => console.error('❌ Error en Keep-Alive Ping:', err));
+  }, pingInterval);
+  
+  // Hacer un primer ping a los 5 segundos de abrir la web para ir despertando
+  setTimeout(() => {
+    fetch(`${API_BASE_URL}/health`)
+      .then(() => console.log('Despertando servidor en la nube...'))
+      .catch(() => {});
+  }, 5000);
+}
 
 // Inicializar Mapa Leaflet
 function initMap() {
